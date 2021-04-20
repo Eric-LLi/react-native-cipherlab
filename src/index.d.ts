@@ -16,9 +16,10 @@ export type BatteryTypes = {
 }
 
 export type DevicesTypes = {
-	name?: string;
-	mac?: string;
+	name: string;
+	mac: string;
 	power?: number;
+	antennaLevel?: number;
 };
 
 export type ReaderStatus = {
