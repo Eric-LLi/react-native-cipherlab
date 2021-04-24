@@ -260,7 +260,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                 byte[] oldData = StringToBytes(oldTag);
                 byte[] newData = StringToBytes(newTag);
                 byte[] password = StringToBytes("00000000");
-                DeviceResponse re = mRfidManager.RFIDDirectWriteTagByEPC(password, oldData, RFIDMemoryBank.EPC, 4, 3, newData); // set kill password
+                DeviceResponse re = mRfidManager.RFIDDirectWriteTagByEPC(null, oldData, RFIDMemoryBank.EPC, 4, 3, newData);
 
                 WritableMap map = Arguments.createMap();
                 map.putBoolean("status", re == DeviceResponse.OperationSuccess);
