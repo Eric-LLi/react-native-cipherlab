@@ -1,9 +1,6 @@
 export enum READER_EVENTS {
 	TAG = 'TAG',
-	TAGS = 'TAGS',
-	HANDLE_ERROR = 'HANDLE_ERROR',
 	BARCODE = 'BARCODE',
-	LOCATE_TAG = 'LOCATE_TAG',
 	WRITE_TAG = 'WRITE_TAG',
 	TRIGGER_STATUS = 'TRIGGER_STATUS',
 	READER_STATUS = 'READER_STATUS',
@@ -40,10 +37,9 @@ type onReaderStatus = (data: ReaderStatus) => void;
 type onTagResult = (tag: string) => void;
 type onProgramResult = (data: ProgramStatus) => void;
 type onTriggerStatus = (data: TriggerStatus) => void;
-type onLocateTagResult = (data: { distance: number }) => void;
 type onBatteryResult = (data: BatteryTypes) => void;
 
-export type Callbacks = onReaderStatus | onTagResult | onProgramResult | onTriggerStatus | onLocateTagResult | onBatteryResult;
+export type Callbacks = onReaderStatus | onTagResult | onProgramResult | onTriggerStatus | onBatteryResult;
 
 export declare function on(event: READER_EVENTS, callback: Callbacks): void;
 
@@ -51,7 +47,7 @@ export declare function off(event: READER_EVENTS): void;
 
 export declare function removeAll(event: READER_EVENTS): void;
 
-export declare function connect(name: string): Promise<boolean>;
+export declare function connect(): Promise<boolean>;
 
 export declare function reconnect(): void;
 
@@ -69,10 +65,6 @@ export declare function setAntennaLevel(antennaLevel: number): Promise<void>;
 
 export declare function programTag(oldTag : string, newTag: string): Promise<boolean>;
 
-export declare function locateTag(tag: string): Promise<void>;
-
 export declare function setEnabled(enable: boolean): Promise<void>;
 
 export declare function setSingleRead(enable: boolean): void;
-
-export declare function enableLocateTag(enable: boolean, tag?: string): Promise<void>;
