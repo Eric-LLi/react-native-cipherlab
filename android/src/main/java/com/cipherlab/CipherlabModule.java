@@ -591,7 +591,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                     int ReadData_length = intent.getIntExtra(GeneralString.EXTRA_ReadData_LENGTH, 0);
 
                     if (isSingleRead) {
-                        if (data_rssi > -40) {
+                        if (data_rssi > -50) {
                             mRfidManager.SoftScanTrigger(false);
                             sendEvent(TAG, EPC);
                         }
