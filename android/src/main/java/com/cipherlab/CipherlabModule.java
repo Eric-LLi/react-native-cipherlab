@@ -593,7 +593,10 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                     if (isSingleRead) {
                         if (data_rssi > -50) {
                             mRfidManager.SoftScanTrigger(false);
-                            sendEvent(TAG, EPC);
+
+                            if (addTagToList(EPC) && cacheTags.size() == 1) {
+                                sendEvent(TAG, EPC);
+                            }
                         }
                     } else {
                         if (addTagToList(EPC)) {
