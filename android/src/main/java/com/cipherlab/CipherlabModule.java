@@ -56,6 +56,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
 
     private static ArrayList<String> cacheTags = new ArrayList<>();
     private static boolean isSingleRead = false;
+    private static boolean isReadBarcode = false;
 
     private static CipherlabModule instance = null;
 
@@ -94,17 +95,29 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
 
     public void onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == 545) {
-            WritableMap map = Arguments.createMap();
-            map.putBoolean("status", false);
-            sendEvent(TRIGGER_STATUS, map);
+            if (event.getRepeatCount() == 0) {
+                WritableMap map = Arguments.createMap();
+                map.putBoolean("status", false);
+                sendEvent(TRIGGER_STATUS, map);
+
+                if (isReadBarcode) {
+                    //
+                }
+            }
         }
     }
 
     public void onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == 545) {
-            WritableMap map = Arguments.createMap();
-            map.putBoolean("status", true);
-            sendEvent(TRIGGER_STATUS, map);
+            if (event.getRepeatCount() == 0) {
+                WritableMap map = Arguments.createMap();
+                map.putBoolean("status", true);
+                sendEvent(TRIGGER_STATUS, map);
+
+                if (isReadBarcode) {
+                    mReaderManager.SoftScanTrigger();
+                }
+            }
         }
     }
 
@@ -238,6 +251,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
     @ReactMethod
     public void setEnabled(boolean enable, Promise promise) {
         if (mRfidManager != null && mRfidManager.GetConnectionStatus()) {
+            isReadBarcode = !enable;
             String error = null;
             int re = mRfidManager.EnableDeviceTrigger(enable);
 
@@ -272,6 +286,21 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         }
     }
 
+    @ReactMethod
+    public void softReadCancel(boolean enable, Promise promise) {
+        try {
+            if (mRfidManager != null) {
+                mRfidManager.SoftScanTrigger(enable);
+
+                promise.resolve(true);
+            } else {
+                throw new Exception("Reader is not connected");
+            }
+        } catch (Exception err) {
+            promise.reject(err);
+        }
+    }
+
     private byte[] StringToBytes(String s) {
         int var1 = s.length();
         byte[] var2 = new byte[var1 / 2];
@@ -298,6 +327,8 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
             SetPowerMode(PowerMode.Normal);
 
             SetRFLink(RFLink.PR_ASK_Miller4_300KHz);
+
+            int level = mRfidManager.SetTxPower(5);
         }
     }
 
@@ -339,32 +370,52 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
     }
 
     private void doConnect() {
+        mRfidManager = RfidManager.InitInstance(reactContext);
+        mReaderManager = ReaderManager.InitInstance(reactContext);
+        mReaderCallback = new barcodeCallback();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(GeneralString.Intent_RFIDSERVICE_CONNECTED);
+        filter.addAction(GeneralString.Intent_RFIDSERVICE_TAG_DATA);
+        filter.addAction(GeneralString.Intent_RFIDSERVICE_EVENT);
+        filter.addAction(GeneralString.Intent_FWUpdate_ErrorMessage);
+        filter.addAction(GeneralString.Intent_FWUpdate_Percent);
+        filter.addAction(GeneralString.Intent_FWUpdate_Finish);
+        filter.addAction(GeneralString.Intent_GUN_Attached);
+        filter.addAction(GeneralString.Intent_GUN_Unattached);
+        filter.addAction(GeneralString.Intent_GUN_Power);
+
+        filter.addAction(com.cipherlab.barcode.GeneralString.Intent_SOFTTRIGGER_DATA);
+        filter.addAction(com.cipherlab.barcode.GeneralString.Intent_PASS_TO_APP);
+        filter.addAction(com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED);
+
+        reactContext.registerReceiver(myDataReceiver, filter);
 //        if (mRfidManager == null) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mRfidManager = RfidManager.InitInstance(reactContext);
-                mReaderManager = ReaderManager.InitInstance(reactContext);
-                mReaderCallback = new barcodeCallback();
-
-                IntentFilter filter = new IntentFilter();
-                filter.addAction(GeneralString.Intent_RFIDSERVICE_CONNECTED);
-                filter.addAction(GeneralString.Intent_RFIDSERVICE_TAG_DATA);
-                filter.addAction(GeneralString.Intent_RFIDSERVICE_EVENT);
-                filter.addAction(GeneralString.Intent_FWUpdate_ErrorMessage);
-                filter.addAction(GeneralString.Intent_FWUpdate_Percent);
-                filter.addAction(GeneralString.Intent_FWUpdate_Finish);
-                filter.addAction(GeneralString.Intent_GUN_Attached);
-                filter.addAction(GeneralString.Intent_GUN_Unattached);
-                filter.addAction(GeneralString.Intent_GUN_Power);
-
-                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_SOFTTRIGGER_DATA);
-                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_PASS_TO_APP);
-                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED);
-
-                reactContext.registerReceiver(myDataReceiver, filter);
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                mRfidManager = RfidManager.InitInstance(reactContext);
+//                mReaderManager = ReaderManager.InitInstance(reactContext);
+//                mReaderCallback = new barcodeCallback();
+//
+//                IntentFilter filter = new IntentFilter();
+//                filter.addAction(GeneralString.Intent_RFIDSERVICE_CONNECTED);
+//                filter.addAction(GeneralString.Intent_RFIDSERVICE_TAG_DATA);
+//                filter.addAction(GeneralString.Intent_RFIDSERVICE_EVENT);
+//                filter.addAction(GeneralString.Intent_FWUpdate_ErrorMessage);
+//                filter.addAction(GeneralString.Intent_FWUpdate_Percent);
+//                filter.addAction(GeneralString.Intent_FWUpdate_Finish);
+//                filter.addAction(GeneralString.Intent_GUN_Attached);
+//                filter.addAction(GeneralString.Intent_GUN_Unattached);
+//                filter.addAction(GeneralString.Intent_GUN_Power);
+//
+//                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_SOFTTRIGGER_DATA);
+//                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_PASS_TO_APP);
+//                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED);
+//
+//                reactContext.registerReceiver(myDataReceiver, filter);
+//            }
+//        }).start();
 //        }
     }
 

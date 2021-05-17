@@ -68,3 +68,5 @@ export declare function programTag(oldTag : string, newTag: string): Promise<boo
 export declare function setEnabled(enable: boolean): Promise<void>;
 
 export declare function setSingleRead(enable: boolean): void;
+
+export declare function softReadCancel(enable: boolean): Promise<boolean>;
