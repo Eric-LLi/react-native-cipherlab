@@ -96,13 +96,13 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
     public void onKeyUp(int keyCode, KeyEvent event) {
         if (keyCode == 545) {
             if (event.getRepeatCount() == 0) {
-                WritableMap map = Arguments.createMap();
-                map.putBoolean("status", false);
-                sendEvent(TRIGGER_STATUS, map);
-
                 if (isReadBarcode) {
                     //
                 }
+
+                WritableMap map = Arguments.createMap();
+                map.putBoolean("status", false);
+                sendEvent(TRIGGER_STATUS, map);
             }
         }
     }
@@ -110,13 +110,13 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
     public void onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == 545) {
             if (event.getRepeatCount() == 0) {
-                WritableMap map = Arguments.createMap();
-                map.putBoolean("status", true);
-                sendEvent(TRIGGER_STATUS, map);
-
                 if (isReadBarcode) {
                     mReaderManager.SoftScanTrigger();
                 }
+
+                WritableMap map = Arguments.createMap();
+                map.putBoolean("status", true);
+                sendEvent(TRIGGER_STATUS, map);
             }
         }
     }
@@ -327,8 +327,6 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
             SetPowerMode(PowerMode.Normal);
 
             SetRFLink(RFLink.PR_ASK_Miller4_300KHz);
-
-            int level = mRfidManager.SetTxPower(5);
         }
     }
 
