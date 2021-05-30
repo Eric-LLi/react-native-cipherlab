@@ -504,7 +504,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         String error = null;
         Gen2Settings settings = new Gen2Settings();
 
-        settings.Session = SessionSettings.S0;
+        settings.Session = SessionSettings.S1;
         settings.InventoryStatus_Action = InventoryStatusSettings.STATE_A;
         settings.SL_Flag = SLFlagSettings.All;
 
