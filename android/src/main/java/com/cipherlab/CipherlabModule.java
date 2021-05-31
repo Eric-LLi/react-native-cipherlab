@@ -368,6 +368,10 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
     }
 
     private void doConnect() {
+        if (mRfidManager != null || mReaderManager != null) {
+            doDisconnect();
+        }
+
         mRfidManager = RfidManager.InitInstance(reactContext);
         mReaderManager = ReaderManager.InitInstance(reactContext);
         mReaderCallback = new barcodeCallback();
@@ -450,7 +454,6 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         if (error != null) {
             throw new Exception(error);
         }
-
     }
 
     private void SetPowerMode(PowerMode mode) throws Exception {
