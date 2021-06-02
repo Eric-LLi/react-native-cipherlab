@@ -391,7 +391,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         filter.addAction(com.cipherlab.barcode.GeneralString.Intent_PASS_TO_APP);
         filter.addAction(com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED);
 
-        reactContext.registerReceiver(myDataReceiver, filter);
+        this.reactContext.registerReceiver(myDataReceiver, filter);
 //        if (mRfidManager == null) {
 //        new Thread(new Runnable() {
 //            @Override
@@ -423,7 +423,12 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
 
     private void doDisconnect() {
         if (mRfidManager != null || mReaderManager != null) {
-            reactContext.unregisterReceiver(myDataReceiver);
+            try {
+                this.reactContext.unregisterReceiver(myDataReceiver);
+            } catch (Exception err) {
+                Log.e(LOG, err.getMessage());
+            }
+
 
             if (mRfidManager != null) {
                 mRfidManager.Release();
@@ -439,6 +444,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
 
             WritableMap map = Arguments.createMap();
             map.putBoolean("status", false);
+            map.putString("error", null);
             sendEvent(READER_STATUS, map);
         }
     }
@@ -600,6 +606,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                     //doDisconnect();
                     WritableMap map = Arguments.createMap();
                     map.putBoolean("status", false);
+                    map.putString("error", null);
                     sendEvent(READER_STATUS, map);
                     break;
                 case GeneralString.Intent_GUN_Power:
