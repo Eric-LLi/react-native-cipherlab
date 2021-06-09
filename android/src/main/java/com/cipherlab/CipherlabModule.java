@@ -616,7 +616,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                     break;
                 case GeneralString.Intent_RFIDSERVICE_EVENT:
                     int event = intent.getIntExtra(GeneralString.EXTRA_EVENT_MASK, -1);
-                    Log.d(TAG, "[Intent_RFIDSERVICE_EVENT] DeviceEvent=" + event);
+                    Log.d(LOG, "[Intent_RFIDSERVICE_EVENT] DeviceEvent=" + event);
                     if (event == DeviceEvent.PowerSavingMode.getValue()) {
                         Log.i(GeneralString.TAG, "PowerSavingMode ");
                     } else if (event == DeviceEvent.LowBattery.getValue()) {
