@@ -54,7 +54,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
     private static ReaderManager mReaderManager;
     private static ReaderCallback mReaderCallback;
 
-    private static ArrayList<String> cacheTags = new ArrayList<>();
+    private static final ArrayList<String> cacheTags = new ArrayList<>();
     private static boolean isSingleRead = false;
     private static boolean isReadBarcode = false;
 
@@ -210,7 +210,7 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
 
             promise.resolve(map);
         } else {
-            promise.reject(LOG, "Fail to retrieve device details");
+            promise.reject(LOG, "Failed to retrieve device details");
         }
     }
 
@@ -227,18 +227,18 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                 error = mRfidManager.GetLastError();
                 promise.reject(LOG, error);
             } else {
-                promise.resolve(level);
+                promise.resolve(true);
             }
         }
 
-        promise.reject(LOG, "Fail to change antenna level");
+        promise.reject(LOG, "Failed to change antenna power");
     }
 
     @ReactMethod
     public void clear() {
         Log.d(LOG, "clear");
 
-        cacheTags = new ArrayList<>();
+        cacheTags.clear();
     }
 
     @ReactMethod
