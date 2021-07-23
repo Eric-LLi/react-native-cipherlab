@@ -97,7 +97,9 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         if (keyCode == 545) {
             if (event.getRepeatCount() == 0) {
                 if (isReadBarcode) {
-                    //
+                    Intent intent = new Intent("android.intent.action.FUNC_RELEASE_BUTTON");
+                    this.reactContext.sendBroadcast(intent);
+//                    mReaderManager.SoftScanTrigger();
                 }
 
                 WritableMap map = Arguments.createMap();
@@ -111,7 +113,9 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         if (keyCode == 545) {
             if (event.getRepeatCount() == 0) {
                 if (isReadBarcode) {
-                    mReaderManager.SoftScanTrigger();
+                    Intent intent = new Intent("android.intent.action.FUNC_BUTTON");
+                    this.reactContext.sendBroadcast(intent);
+//                    mReaderManager.SoftScanTrigger();
                 }
 
                 WritableMap map = Arguments.createMap();
@@ -221,9 +225,11 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         String error = null;
 
         if (mRfidManager != null && mRfidManager.GetConnectionStatus()) {
+            Log.d(LOG, "setAntennaLevel: " + antennaLevel);
             int level = mRfidManager.SetTxPower(antennaLevel);
 
             if (level != ClResult.S_OK.ordinal()) {
+                Log.d(LOG, mRfidManager.GetLastError());
                 error = mRfidManager.GetLastError();
                 promise.reject(LOG, error);
             } else {
@@ -252,10 +258,13 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
     public void setEnabled(boolean enable, Promise promise) {
         if (mRfidManager != null && mRfidManager.GetConnectionStatus()) {
             isReadBarcode = !enable;
+            Log.d(LOG, "setEnabled: " + enable);
+
             String error = null;
             int re = mRfidManager.EnableDeviceTrigger(enable);
 
             if (re != ClResult.S_OK.ordinal()) {
+                Log.d(LOG, mRfidManager.GetLastError());
                 error = mRfidManager.GetLastError();
             }
 
@@ -276,10 +285,12 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                 byte[] password = StringToBytes("00000000");
                 DeviceResponse re = mRfidManager.RFIDDirectWriteTagByEPC(null, oldData, RFIDMemoryBank.EPC, 4, 3, newData);
 
-                WritableMap map = Arguments.createMap();
-                map.putBoolean("status", re == DeviceResponse.OperationSuccess);
-                map.putString("error", re.toString());
-                sendEvent(WRITE_TAG_STATUS, map);
+                if (re != DeviceResponse.OperationSuccess) {
+                    WritableMap map = Arguments.createMap();
+                    map.putBoolean("status", false);
+                    map.putString("error", re.toString());
+                    sendEvent(WRITE_TAG_STATUS, map);
+                }
             }
         } catch (Exception err) {
             promise.reject(err);
@@ -372,8 +383,10 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
             doDisconnect();
         }
 
-        mRfidManager = RfidManager.InitInstance(reactContext);
-        mReaderManager = ReaderManager.InitInstance(reactContext);
+        Log.d(LOG, "doConnect");
+
+        mRfidManager = RfidManager.InitInstance(this.reactContext);
+        mReaderManager = ReaderManager.InitInstance(this.reactContext);
         mReaderCallback = new barcodeCallback();
 
         IntentFilter filter = new IntentFilter();
@@ -392,36 +405,10 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
         filter.addAction(com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED);
 
         this.reactContext.registerReceiver(myDataReceiver, filter);
-//        if (mRfidManager == null) {
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                mRfidManager = RfidManager.InitInstance(reactContext);
-//                mReaderManager = ReaderManager.InitInstance(reactContext);
-//                mReaderCallback = new barcodeCallback();
-//
-//                IntentFilter filter = new IntentFilter();
-//                filter.addAction(GeneralString.Intent_RFIDSERVICE_CONNECTED);
-//                filter.addAction(GeneralString.Intent_RFIDSERVICE_TAG_DATA);
-//                filter.addAction(GeneralString.Intent_RFIDSERVICE_EVENT);
-//                filter.addAction(GeneralString.Intent_FWUpdate_ErrorMessage);
-//                filter.addAction(GeneralString.Intent_FWUpdate_Percent);
-//                filter.addAction(GeneralString.Intent_FWUpdate_Finish);
-//                filter.addAction(GeneralString.Intent_GUN_Attached);
-//                filter.addAction(GeneralString.Intent_GUN_Unattached);
-//                filter.addAction(GeneralString.Intent_GUN_Power);
-//
-//                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_SOFTTRIGGER_DATA);
-//                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_PASS_TO_APP);
-//                filter.addAction(com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED);
-//
-//                reactContext.registerReceiver(myDataReceiver, filter);
-//            }
-//        }).start();
-//        }
     }
 
     private void doDisconnect() {
+        Log.d(LOG, "doDisconnect");
         if (mRfidManager != null || mReaderManager != null) {
             try {
                 this.reactContext.unregisterReceiver(myDataReceiver);
@@ -429,17 +416,16 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                 Log.e(LOG, err.getMessage());
             }
 
-
             if (mRfidManager != null) {
                 mRfidManager.Release();
 
-                mRfidManager = null;
+//                mRfidManager = null;
             }
 
             if (mReaderManager != null) {
                 mReaderManager.Release();
 
-                mReaderManager = null;
+//                mReaderManager = null;
             }
 
             WritableMap map = Arguments.createMap();
@@ -580,9 +566,10 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(LOG, intent.getAction());
+
             switch (intent.getAction()) {
-                case GeneralString.Intent_RFIDSERVICE_CONNECTED:
-                    Log.d(LOG, "Intent_RFIDSERVICE_CONNECTED");
+                case GeneralString.Intent_RFIDSERVICE_CONNECTED: {
                     try {
                         RFIDConfigureReader();
 
@@ -596,25 +583,25 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                         sendEvent(READER_STATUS, map);
                     }
                     break;
-                case GeneralString.Intent_GUN_Attached:
-                    Log.d(LOG, "Intent_GUN_Attached");
-
+                }
+                case GeneralString.Intent_GUN_Attached: {
                     doConnect();
                     break;
-                case GeneralString.Intent_GUN_Unattached:
-                    Log.d(LOG, "Intent_GUN_Unattached");
+                }
+                case GeneralString.Intent_GUN_Unattached: {
                     //doDisconnect();
                     WritableMap map = Arguments.createMap();
                     map.putBoolean("status", false);
                     map.putString("error", null);
                     sendEvent(READER_STATUS, map);
                     break;
-                case GeneralString.Intent_GUN_Power:
-                    Log.d(LOG, "Intent_GUN_Power");
+                }
+                case GeneralString.Intent_GUN_Power: {
                     boolean AC = intent.getBooleanExtra(GeneralString.Data_GUN_ACPower, false);
                     boolean Connect = intent.getBooleanExtra(GeneralString.Data_GUN_Connect, false);
                     break;
-                case GeneralString.Intent_RFIDSERVICE_EVENT:
+                }
+                case GeneralString.Intent_RFIDSERVICE_EVENT: {
                     int event = intent.getIntExtra(GeneralString.EXTRA_EVENT_MASK, -1);
                     Log.d(LOG, "[Intent_RFIDSERVICE_EVENT] DeviceEvent=" + event);
                     if (event == DeviceEvent.PowerSavingMode.getValue()) {
@@ -631,7 +618,8 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                         Log.i(GeneralString.TAG, "Battery_Re_Plug ");
                     }
                     break;
-                case GeneralString.Intent_RFIDSERVICE_TAG_DATA:
+                }
+                case GeneralString.Intent_RFIDSERVICE_TAG_DATA: {
                     /*
                      * type : 0=Normal scan (Press Trigger Key to receive the data) ; 1=Inventory EPC ; 2=Inventory ECP TID ; 3=Reader tag ; 5=Write tag ; 6=Lock tag ; 7=Kill tag ; 8=Authenticate tag ; 9=Untraceable tag
                      * response : 0=RESPONSE_OPERATION_SUCCESS ; 1=RESPONSE_OPERATION_FINISH ; 2=RESPONSE_OPERATION_TIMEOUT_FAIL ; 6=RESPONSE_PASSWORD_FAIL ; 7=RESPONSE_OPERATION_FAIL ;251=DEVICE_BUSY
@@ -641,32 +629,45 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                     int response = intent.getIntExtra(GeneralString.EXTRA_RESPONSE, -1);
                     double data_rssi = intent.getDoubleExtra(GeneralString.EXTRA_DATA_RSSI, 0);
 
-                    String PC = intent.getStringExtra(GeneralString.EXTRA_PC);
-                    String EPC = intent.getStringExtra(GeneralString.EXTRA_EPC);
-                    String TID = intent.getStringExtra(GeneralString.EXTRA_TID);
-                    String ReadData = intent.getStringExtra(GeneralString.EXTRA_ReadData);
-                    int EPC_length = intent.getIntExtra(GeneralString.EXTRA_EPC_LENGTH, 0);
-                    int TID_length = intent.getIntExtra(GeneralString.EXTRA_TID_LENGTH, 0);
-                    int ReadData_length = intent.getIntExtra(GeneralString.EXTRA_ReadData_LENGTH, 0);
+                    Log.d(LOG, "[Intent_RFIDSERVICE_TAG_DATA] type=" + type + ", response=" + response + ", data_rssi=" + data_rssi);
 
-                    if (isSingleRead) {
-                        if (data_rssi > -50) {
-                            mRfidManager.SoftScanTrigger(false);
+                    if (type == 5) {
+                        WritableMap map = Arguments.createMap();
+                        map.putBoolean("status", response == 0 || response == 1);
+                        map.putString("error", response == 0 || response == 1 ? null : "Failed to program tag...");
+                        sendEvent(WRITE_TAG_STATUS, map);
+                    } else {
 
-                            if (addTagToList(EPC) && cacheTags.size() == 1) {
+
+                        String PC = intent.getStringExtra(GeneralString.EXTRA_PC);
+                        String EPC = intent.getStringExtra(GeneralString.EXTRA_EPC);
+                        String TID = intent.getStringExtra(GeneralString.EXTRA_TID);
+                        String ReadData = intent.getStringExtra(GeneralString.EXTRA_ReadData);
+                        int EPC_length = intent.getIntExtra(GeneralString.EXTRA_EPC_LENGTH, 0);
+                        int TID_length = intent.getIntExtra(GeneralString.EXTRA_TID_LENGTH, 0);
+                        int ReadData_length = intent.getIntExtra(GeneralString.EXTRA_ReadData_LENGTH, 0);
+
+                        Log.d(LOG, "TAG: " + EPC);
+                        Log.d(LOG, "RSSI: " + data_rssi);
+                        if (isSingleRead) {
+                            if (data_rssi > -70) {
+                                mRfidManager.SoftScanTrigger(false);
+
+                                if (addTagToList(EPC) && cacheTags.size() == 1) {
+                                    sendEvent(TAG, EPC);
+                                }
+                            }
+                        } else {
+                            if (addTagToList(EPC)) {
                                 sendEvent(TAG, EPC);
                             }
                         }
-                    } else {
-                        if (addTagToList(EPC)) {
-                            sendEvent(TAG, EPC);
-                        }
                     }
-                    break;
-                case com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED:
-                    // Make sure this app bind to barcode reader service , then user can use APIs to get/set settings from barcode reader service
-                    Log.d(LOG, "Intent_READERSERVICE_CONNECTED");
 
+                    break;
+                }
+                case com.cipherlab.barcode.GeneralString.Intent_READERSERVICE_CONNECTED: {
+                    // Make sure this app bind to barcode reader service , then user can use APIs to get/set settings from barcode reader service
                     try {
                         BarcodeConfigureReader();
                     } catch (Exception err) {
@@ -677,13 +678,15 @@ public class CipherlabModule extends ReactContextBaseJavaModule implements Lifec
                     }
 
                     break;
+                }
                 case com.cipherlab.barcode.GeneralString.Intent_PASS_TO_APP:
-                case com.cipherlab.barcode.GeneralString.Intent_SOFTTRIGGER_DATA:
+                case com.cipherlab.barcode.GeneralString.Intent_SOFTTRIGGER_DATA: {
                     // extra string from intent
                     String barcode = intent.getStringExtra(com.cipherlab.barcode.GeneralString.BcReaderData);
 
                     sendEvent(BARCODE, barcode);
                     break;
+                }
             }
         }
     };
